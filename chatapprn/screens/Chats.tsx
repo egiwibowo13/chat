@@ -1,56 +1,95 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from 'react-native';
 import socket from '../socket';
+import {User} from './Interfaces';
 
-const Chats = ({navigation, route}) => {
+const SeparatorItem: React.FC<{}> = () => {
+  return <View style={styles.separator} />;
+};
+
+const Chats: React.FC<{navigation: any; route: any}> = ({
+  navigation,
+  route,
+}) => {
   const {user} = route.params;
-  const {username, name, avatar} = user ?? {};
-  const [users, setUsers] = useState<{userID: string; username: string}[]>([]);
+  const {username} = user ?? {};
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
     socket.emit('getUsers', {username}, (response: any) => {
-      console.log(response); // "got it"
       setUsers(response);
     });
 
-    socket.on('user connected', user => {
-      setUsers((prev: any[]) => {
-        return [...prev, user];
+    socket.on('user connected', (_user: User) => {
+      setUsers((prev: User[]) => {
+        return [...prev, _user];
       });
-      console.log('user >>', user);
     });
   }, [username]);
 
   return (
-    <View>
+    <View style={styles.container}>
       <Text>Connected Users:</Text>
       <FlatList
         data={users}
+        contentContainerStyle={styles.flatlist}
         keyExtractor={item => item.userID}
+        ItemSeparatorComponent={SeparatorItem}
         renderItem={({item}) => {
           return (
             <TouchableOpacity
-              style={{height: 50, marginVertical: 5}}
+              style={styles.item}
               onPress={() => {
                 const selectedUser = item;
                 navigation.navigate('Chat', {
                   selectedUser,
                 });
               }}>
-              <Text>{item.userID}</Text>
-              <Text>{item.username}</Text>
+              <Image source={{uri: item.avatar}} style={styles.img} />
+              <View style={styles.containerUsername}>
+                <Text>{item.userID}</Text>
+                <Text>{item.username}</Text>
+              </View>
             </TouchableOpacity>
           );
         }}
       />
-      {/* <TextInput
-        placeholder="Enter your username"
-        value={username}
-        onChangeText={text => setUsername(text)}
-      />
-      <Button title="Set Username" onPress={setUserName} /> */}
     </View>
   );
 };
 
 export default Chats;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    padding: 16,
+  },
+  item: {
+    marginVertical: 5,
+    flexDirection: 'row',
+  },
+  img: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  containerUsername: {
+    marginLeft: 16,
+  },
+  flatlist: {
+    marginVertical: 16,
+    marginHorizontal: 16,
+  },
+  separator: {
+    height: 16,
+  },
+});

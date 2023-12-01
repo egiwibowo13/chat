@@ -1,9 +1,9 @@
 // Import necessary modules
 import React, {useEffect, useState} from 'react';
-import {View, Text, Button, TextInput} from 'react-native';
+import {View, Text, Button, TextInput, StyleSheet} from 'react-native';
 import socket from '../socket';
 import {storage} from '../storageMkkv';
-import {User} from './Interfaces';
+import {UserRequest} from './Interfaces';
 
 const MyInput: React.FC<{
   label: string;
@@ -17,27 +17,20 @@ const MyInput: React.FC<{
         value={value}
         onChangeText={onChangeText}
         placeholder="Input Chat ID"
-        style={{
-          height: 50,
-          width: '100%',
-          borderWidth: 1,
-          borderRadius: 8,
-          borderColor: 'grey',
-          marginTop: 8,
-        }}
+        style={styles.textInput}
       />
     </View>
   );
 };
 
-const JoinChat = ({navigation}) => {
+const JoinChat: React.FC<{navigation: any}> = ({navigation}) => {
   useEffect(() => {
-    const sessionID = storage.getString('sessionID');
+    // const sessionID = storage.getString('sessionID');
 
-    if (sessionID) {
-      socket.auth = {sessionID};
-      socket.connect();
-    }
+    // if (sessionID) {
+    //   socket.auth = {sessionID};
+    //   socket.connect();
+    // }
 
     socket.on('connect_error', err => {
       if (err.message === 'invalid username') {
@@ -49,39 +42,19 @@ const JoinChat = ({navigation}) => {
     };
   }, []);
 
-  //   // Event listener for receiving messages
-  //   socket.on('chat message', msg => {
-  //     console.log('Received message:', msg);
-  //   });
-
-  //   // Cleanup on component unmount
-  //   return () => {
-  //     socket.disconnect();
-  //   };
-  // }, []);
-
-  // const sendMessage = () => {
-  //   // Replace 'recipient-socket-id' with the actual recipient's socket ID
-  //   const recipientId = 'recipient-socket-id';
-  //   const message = 'Hello, this is a message from React Native!';
-
-  //   // Emit a 'private message' event to the server
-  //   socket.emit('private message', {recipientId, message});
-  // };
-
-  const [value, setValue] = useState<User>({
+  const [value, setValue] = useState<UserRequest>({
     username: '',
     name: '',
     avatar:
       'https://robohash.org/b256d0f7be4e9e1d55aef692e4642b7e?set=set4&bgset=&size=400x400',
   });
 
-  const handlechangeValue = (key: keyof User) => (v: string) => {
+  const handlechangeValue = (key: keyof UserRequest) => (v: string) => {
     setValue(prev => ({...prev, [key]: v}));
   };
 
   return (
-    <View style={{flex: 1, padding: 16}}>
+    <View style={styles.container}>
       <MyInput
         label="Username"
         value={value?.username}
@@ -97,7 +70,7 @@ const JoinChat = ({navigation}) => {
         value={value?.avatar}
         onChangeText={handlechangeValue('avatar')}
       />
-      <View style={{flex: 1}} />
+      <View style={styles.spacer} />
       <Button
         title="Join Chat"
         onPress={() => {
@@ -111,3 +84,23 @@ const JoinChat = ({navigation}) => {
 };
 
 export default JoinChat;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    padding: 16,
+  },
+  textInput: {
+    height: 50,
+    width: '100%',
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: 'grey',
+    marginTop: 8,
+    paddingHorizontal: 8,
+  },
+  spacer: {
+    flex: 1,
+  },
+});
